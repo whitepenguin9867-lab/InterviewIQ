@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>InterviewIQ — Practice makes progress</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header><div class="logo">✦ <strong>InterviewIQ</strong></div><span class="tag">Student project · Interview practice</span></header>
+  <main>
+    <section id="setup" class="card">
+      <div class="eyebrow">YOUR PRACTICE SPACE</div>
+      <h1>Get ready for your next interview.</h1>
+      <p class="muted intro">Practice answering real questions, hear follow-ups, and learn how to improve.</p>
+      <label for="role">What are you interviewing for?</label>
+      <input id="role" maxlength="150" placeholder="Example: Software engineering internship" value="Software engineering internship" />
+      <label for="type">Interview style</label>
+      <select id="type"><option value="Job interview">Job interview</option><option value="College admissions">College admissions</option><option value="Scholarship">Scholarship</option><option value="Technical">Technical</option></select>
+      <label for="context">Anything the interviewer should know? <span class="muted">(optional)</span></label>
+      <textarea id="context" rows="3" maxlength="800" placeholder="Your interests, experience, or the job description"></textarea>
+      <div class="row"><button id="start" class="primary">Start practice interview →</button><span id="mode" class="muted tiny">Checking API setup…</span></div>
+    </section>
+
+    <section id="interview" class="card hidden" aria-live="polite">
+      <div class="topline"><span class="eyebrow">PRACTICE INTERVIEW</span><span id="progress" class="pill">Question 1 of 5</span></div>
+      <div class="avatar-wrap"><div id="avatar" class="avatar" aria-label="Animated interviewer">
+        <div class="hair"></div><div class="face"><div class="eyes"><span></span><span></span></div><div class="nose"></div><div class="mouth"></div></div><div class="shirt"></div>
+      </div></div>
+      <div class="center"><span id="speaking" class="muted tiny">Your interviewer</span><h2 id="question"></h2></div>
+      <div class="transcript-label">Voice transcript</div>
+      <div id="transcript" class="transcript empty" aria-live="polite">Your spoken answer will appear here.</div>
+      <div class="row actions"><button id="record" class="primary">🎙 Start answering</button><button id="repeat" class="secondary">🔊 Repeat question</button></div>
+      <p id="notice" class="tiny muted" role="status">Press Start answering, speak naturally, then press Stop and submit.</p>
+    </section>
+
+    <section id="report" class="card hidden">
+      <div class="eyebrow">INTERVIEW COMPLETE</div><h1>Your practice report</h1>
+      <p class="muted">Practice feedback, not a hiring decision or medical assessment.</p>
+      <div id="summary" class="summary"></div>
+      <div id="scorecards" class="scorecards"></div>
+      <h2>Question-by-question review</h2><div id="reviews"></div>
+      <div class="row"><button id="restart" class="primary">Practice again ↻</button><button id="print" class="secondary">Print report</button></div>
+    </section>
+  </main><footer>Built to help students practice. Recorded audio is sent to Deepgram for transcription.</footer>
+  <script src="/app.js"></script>
+</body>
+</html>

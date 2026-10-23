@@ -1,0 +1,8 @@
+{
+  "name": "interviewiq",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A student-built AI mock interview practice app",
+  "scripts": {"start": "node server.js"},
+  "engines": {"node": ">=18"}
+}
