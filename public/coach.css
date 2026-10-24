@@ -1,0 +1,115 @@
+.coach-button {
+  margin-top: 15px;
+}
+
+.retry-complete {
+  margin-top: 15px;
+  padding: 14px;
+  border-left: 3px solid var(--moss);
+  color: var(--moss);
+  background: #eaf4ee;
+}
+
+.retry-complete p {
+  margin: 5px 0 0;
+}
+
+.coach-question {
+  margin: 24px 0;
+  padding: 18px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+
+.coach-question h2 {
+  margin: 7px 0 0;
+}
+
+.coach-goal {
+  padding: 18px;
+  border-left: 4px solid var(--accent);
+  background: #eef3fa;
+}
+
+.coach-goal p {
+  margin: 7px 0 0;
+  line-height: 1.55;
+}
+
+.attempt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.attempt-card {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid var(--line);
+}
+
+.attempt-card h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.attempt-card p {
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+
+.retry-card {
+  background: #f5f7f9;
+}
+
+.retry-card .transcript {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.coach-comparison {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.comparison-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid var(--line);
+}
+
+.comparison-card strong {
+  color: var(--accent-dark);
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.coach-comparison > .secondary {
+  margin-top: 18px;
+}
+
+@media (max-width: 600px) {
+  .attempt-grid,
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .coach-button {
+    display: none;
+  }
+}
