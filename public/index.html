@@ -16,7 +16,7 @@
       <div class="setup-intro">
         <div class="eyebrow">PRACTICE INTERVIEW</div>
         <h1>Practice an interview out loud.</h1>
-        <p class="intro">Answer five questions with your voice. InterviewIQ listens, asks follow-ups, and gives feedback based on what you actually said.</p>
+        <p class="intro">Answer seven questions with your voice. InterviewIQ listens, explores different topics, asks thoughtful follow-ups, and gives feedback based on what you actually said.</p>
         <div class="steps" aria-label="How it works">
           <div class="step"><span>1</span><p>Choose an interview</p></div>
           <div class="step"><span>2</span><p>Answer by voice</p></div>
@@ -24,7 +24,7 @@
         </div>
       </div>
       <div class="setup-form">
-        <div class="form-heading"><span>Interview setup</span><span>5 questions</span></div>
+        <div class="form-heading"><span>Interview setup</span><span>7 questions</span></div>
         <div class="field">
           <label for="role">What are you interviewing for?</label>
           <input id="role" maxlength="150" placeholder="Example: Software engineering internship" value="Software engineering internship" />
@@ -32,6 +32,10 @@
         <div class="field">
           <label for="type">Interview style</label>
           <select id="type"><option value="Job interview">Job interview</option><option value="College admissions">College admissions</option><option value="Scholarship">Scholarship</option><option value="Technical">Technical</option></select>
+        </div>
+        <div class="field">
+          <label for="voice">Interviewer voice</label>
+          <select id="voice" required><option value="">Choose your interviewer</option></select>
         </div>
         <div class="field">
           <label for="context">Context for your interviewer <span class="muted">— optional</span></label>
@@ -42,7 +46,7 @@
     </section>
 
     <section id="interview" class="card hidden" aria-live="polite">
-      <div class="topline"><span class="eyebrow">PRACTICE INTERVIEW</span><span id="progress" class="pill">Question 1 of 5</span></div>
+      <div class="topline"><span class="eyebrow">PRACTICE INTERVIEW</span><span id="progress" class="pill">Question 1 of 7</span></div>
       <div class="interview-stage">
         <div class="portrait-column"><div class="avatar-wrap"><div id="avatar" class="avatar" aria-label="Animated interviewer">
           <div class="hair"></div><div class="face"><div class="eyes"><span></span><span></span></div><div class="nose"></div><div class="mouth"></div></div><div class="shirt"></div>

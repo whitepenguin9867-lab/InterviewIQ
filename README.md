@@ -1,6 +1,6 @@
 # InterviewIQ
 
-A student-friendly, voice-first mock interview website. It asks five questions aloud, records each spoken answer, automatically transcribes and submits it, and reports on filler words, speaking pace, relevance, answer structure, and next steps. Groq generates answer-specific follow-up questions and explains what each response communicated, what could be improved, and how to make it stronger. After the report, the **Coach me** feature lets a student re-record any answer and compare the retry with the original.
+A student-friendly, voice-first mock interview website. It asks seven questions aloud in a selectable browser voice, records each spoken answer, automatically transcribes and submits it, and reports on filler words, speaking pace, relevance, answer structure, and next steps. Groq mixes answer-specific follow-ups with questions that explore new interview topics, then explains what each response communicated, what could be improved, and how to make it stronger. After the report, the **Coach me** feature lets a student re-record any answer and compare the retry with the original.
 
 ## Run locally
 
@@ -24,7 +24,7 @@ Never put API keys in `public/app.js` or commit the `.env` file. When using APIs
 
 - `public/index.html`: the three screens: setup, interview, report.
 - `public/style.css`: layout and an animated face made entirely with CSS.
-- `public/app.js`: tracks five questions, stores answers, calculates practice metrics, and shows a report.
+- `public/app.js`: tracks seven questions, stores answers, calculates practice metrics, and shows a report.
 - `server.js`: sends requests to Groq/Deepgram without revealing secret API keys.
 
 ## Coach me

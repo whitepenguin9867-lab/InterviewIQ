@@ -1,7 +1,8 @@
 // InterviewIQ — a small, understandable student project.
 const $ = id => document.getElementById(id);
-const TOTAL = 5;
+const TOTAL = 7;
 let settings = {}, config = {}, conversation = [], currentQuestion = '', recording = null, chunks = [], recordStart = 0;
+let speechVoices = [], speechTimer = null;
 let answeringSince = 0;
 let recordedSeconds = 0, recordingTimer = null;
 let reportMetrics = [], reportAi = null, coachIndex = -1;
@@ -10,25 +11,64 @@ const MAX_RECORDING_SECONDS = 120;
 
 const demoQuestions = [
   role => `Tell me about yourself and why you're interested in ${role}.`,
+  () => 'You mentioned what interests you about this opportunity. Which experience best prepared you for it?',
   () => 'Tell me about a challenge you faced and how you handled it.',
   () => 'Describe a time you worked with other people to accomplish a goal.',
   role => `What skills would help you succeed in ${role}? Give an example.`,
+  () => 'In that example, how did you know your approach was working?',
   () => 'What is one area you are working to improve, and how are you improving it?'
 ];
 const demoAnswers = [
   role => `I am a student who enjoys learning and solving problems. I am interested in ${role} because it would let me build useful skills and contribute to a team.`,
+  () => 'A recent coding project prepared me because I had to learn unfamiliar tools, test different ideas, and explain my work clearly to my teammates.',
   () => 'During a difficult group project, I organized our tasks and asked everyone for updates. We completed the project on time, and I learned to communicate earlier.',
   () => 'I worked with classmates on a presentation. I created the outline, helped combine our research, and practiced with the group. Our presentation was clear and well organized.',
   role => `For ${role}, I would bring curiosity, teamwork, and persistence. In a recent project, I kept testing different solutions until I fixed a problem in our code.`,
+  () => 'I knew my approach was working because each test narrowed down the issue, and the final version worked consistently when my teammates tried it.',
   () => 'I am improving my public speaking. I practice explaining projects in simple language, ask for feedback, and use that feedback in my next presentation.'
 ];
 const demoRetryAnswers = [
   role => `I am a student who enjoys learning and solving problems, which is why I am interested in ${role}. In a recent coding project, I kept testing possible solutions until I fixed the problem, and that persistence would help me contribute to the team.`,
+  () => 'A recent coding project prepared me because I learned an unfamiliar tool, tested several possible solutions, and explained the final approach to my teammates. That experience strengthened both my problem-solving and communication skills.',
   () => 'During a difficult group project, I organized the tasks, asked each teammate for updates, and adjusted our plan when someone fell behind. We completed the project on time, and I learned to communicate earlier instead of waiting for a problem.',
   () => 'I worked with classmates on a presentation and took responsibility for creating the outline and combining our research. I also organized a practice session, which helped our group deliver a clear, well-organized presentation.',
   role => `For ${role}, I would bring curiosity, teamwork, and persistence. During a recent coding project, I tested several solutions until I fixed a problem, which helped the group finish a working version of our project.`,
+  () => 'I knew the approach was working because each test ruled out a possible cause. After the fix, I asked my teammates to try the project on their devices, and it worked consistently for them too.',
   () => 'I am improving my public speaking by practicing project explanations and asking for feedback afterward. In my next presentation, I use one piece of that feedback so I can measure steady improvement instead of trying to change everything at once.'
 ];
+
+function loadVoices() {
+  if (!('speechSynthesis' in window)) return;
+  const select = $('voice');
+  const previous = select.value;
+  const available = speechSynthesis.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('en'));
+  const voiceChoices = [
+    { name: 'Daniel', language: 'en-GB' },
+    { name: 'Karen', language: 'en-AU' }
+  ];
+  speechVoices = voiceChoices.map(choice =>
+    available.find(voice => voice.name.includes(choice.name)) ||
+    available.find(voice => voice.lang === choice.language)
+  ).filter(Boolean);
+  select.replaceChildren(new Option('Choose your interviewer', ''));
+  for (const voice of speechVoices) {
+    select.add(new Option(voice.name, voice.name));
+  }
+  if ([...select.options].some(option => option.value === previous)) select.value = previous;
+}
+
+function questionInstruction(index) {
+  if (index === 0) {
+    return `Write ONE concise opening interview question tailored to the ${settings.type} and ${settings.role}. Use the candidate context when provided. Respond with only the question.`;
+  }
+  if (index === 1 || index === 5) {
+    return `Write ONE concise follow-up question for question ${index + 1} of ${TOTAL}. Build on one concrete detail from the candidate's latest answer and probe for an action, reason, challenge, or result that was not fully explained. Do not repeat an earlier question. Respond with only the question.`;
+  }
+  if (index === TOTAL - 1) {
+    return `Write ONE concise closing interview question for question ${index + 1} of ${TOTAL}. Move to a useful topic that has not been covered yet, such as growth, future goals, or self-awareness. Review the full history, do not follow up on only the latest answer, and do not repeat an earlier question. Respond with only the question.`;
+  }
+  return `Write ONE concise interview question for question ${index + 1} of ${TOTAL}. Move to a NEW topic that has not been covered in the full interview history. Choose a relevant area such as teamwork, problem solving, leadership, adaptability, motivation, or role knowledge. Do not make this a follow-up to the latest answer and do not repeat an earlier question. Respond with only the question.`;
+}
 
 async function api(url, body) {
   const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -40,14 +80,26 @@ function setScreen(id) {
   for (const section of ['setup', 'interview', 'report', 'coach']) $(section).classList.toggle('hidden', section !== id);
   window.scrollTo(0, 0);
 }
-function speak(text) {
+function stopSpeaking() {
+  clearTimeout(speechTimer);
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+function speak(text, voiceName = settings.voice) {
   if (!('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
+  stopSpeaking();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = .95;
+  const selectedVoice = speechVoices.find(voice => voice.name === voiceName);
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+    utterance.lang = selectedVoice.lang;
+  }
+  const maleVoice = selectedVoice?.name.includes('Daniel');
+  utterance.rate = maleVoice ? .86 : .95;
+  utterance.pitch = maleVoice ? .48 : 1;
   utterance.onstart = () => { $('avatar').classList.add('talking'); $('speaking').textContent = 'Interviewer speaking…'; };
   utterance.onend = utterance.onerror = () => { $('avatar').classList.remove('talking'); $('speaking').textContent = 'Your turn to answer'; };
-  speechSynthesis.speak(utterance);
+  speechTimer = setTimeout(() => speechSynthesis.speak(utterance), 100);
 }
 function showQuestion(question) {
   currentQuestion = question;
@@ -66,14 +118,12 @@ async function nextQuestion() {
   let question = demoQuestions[index](settings.role);
   let aiError = '';
   if (config.groq) {
-    $('question').textContent = index ? 'Preparing a follow-up question…' : 'Preparing your interview…';
+    $('question').textContent = index ? 'Preparing your next question…' : 'Preparing your interview…';
     $('record').disabled = true;
     try {
       const result = await api('/api/ask', {
         ...settings, history: conversation,
-        instruction: index === 0
-          ? `Write ONE concise opening interview question tailored to the ${settings.type} and ${settings.role}. Use the candidate context when provided. Respond with only the question.`
-          : `Write ONE concise follow-up question for question ${index + 1} of ${TOTAL}. Explicitly build on one concrete detail from the candidate's latest answer, then probe for an action, reason, challenge, or result that was not fully explained. Do not ask a generic question or repeat an earlier question. Respond with only the question.`
+        instruction: questionInstruction(index)
       });
       if (result.text) question = result.text;
     } catch (err) { aiError = `The next question could not be generated, so InterviewIQ used a backup.`; }
@@ -172,7 +222,7 @@ function renderReviews() {
 }
 
 async function finishInterview() {
-  window.speechSynthesis?.cancel();
+  stopSpeaking();
   setScreen('report');
   reportMetrics = conversation.map(evaluateLocally);
   reportAi = null;
@@ -337,7 +387,7 @@ async function recordCoachAnswer() {
         $('coach-record').textContent = 'Record improved answer';
       }
     };
-    window.speechSynthesis?.cancel();
+    stopSpeaking();
     coachRecording.start(); coachRecordStart = Date.now();
     coachRecordingTimer = setTimeout(() => { if (coachRecording?.state === 'recording') coachRecording.stop(); }, MAX_RECORDING_SECONDS * 1000);
     $('coach-record').textContent = '■ Stop and compare';
@@ -393,7 +443,7 @@ async function recordAnswer() {
         if (!$('interview').classList.contains('hidden')) $('record').textContent = 'Start answering';
       }
     };
-    window.speechSynthesis?.cancel();
+    stopSpeaking();
     recording.start(); recordStart = Date.now();
     recordingTimer = setTimeout(() => {
       if (recording?.state === 'recording') recording.stop();
@@ -403,7 +453,8 @@ async function recordAnswer() {
   } catch (err) { $('notice').textContent = 'Microphone error: ' + err.message; }
 }
 $('start').onclick = async () => {
-  settings = { role: $('role').value.trim() || 'an internship', type: $('type').value, context: $('context').value.trim() };
+  if (!$('voice').value) { $('voice').reportValidity(); return; }
+  settings = { role: $('role').value.trim() || 'an internship', type: $('type').value, context: $('context').value.trim(), voice: $('voice').value };
   conversation = [];
   recordedSeconds = 0;
   $('start').disabled = true;
@@ -412,13 +463,20 @@ $('start').onclick = async () => {
 };
 $('record').onclick = recordAnswer;
 $('repeat').onclick = () => speak(currentQuestion);
-$('restart').onclick = () => { window.speechSynthesis?.cancel(); setScreen('setup'); };
+$('restart').onclick = () => { stopSpeaking(); setScreen('setup'); };
 $('print').onclick = () => window.print();
 $('coach-record').onclick = recordCoachAnswer;
 $('coach-repeat').onclick = () => speak(conversation[coachIndex]?.question || '');
-$('coach-back').onclick = () => { window.speechSynthesis?.cancel(); renderReviews(); setScreen('report'); };
+$('coach-back').onclick = () => { stopSpeaking(); renderReviews(); setScreen('report'); };
 $('coach-again').onclick = () => startCoaching(coachIndex);
+$('voice').onchange = () => {
+  const selectedVoice = speechVoices.find(voice => voice.name === $('voice').value);
+  if (selectedVoice) speak(`Hi, I am ${selectedVoice.name}.`, selectedVoice.name);
+};
 fetch('/api/config').then(r => r.json()).then(data => {
   config = data;
   $('mode').textContent = data.groq && data.deepgram ? 'Voice mode ready' : 'Demo mode';
 }).catch(() => { $('mode').textContent = 'Demo mode'; });
+
+loadVoices();
+if ('speechSynthesis' in window) speechSynthesis.addEventListener('voiceschanged', loadVoices);
