@@ -480,8 +480,9 @@ async function recordAnswer() {
   } catch (err) { $('notice').textContent = 'Microphone error: ' + err.message; }
 }
 $('start').onclick = async () => {
+  if (!$('role').value.trim()) { $('role').reportValidity(); return; }
   if (!$('voice').value) { $('voice').reportValidity(); return; }
-  settings = { role: $('role').value.trim() || 'an internship', type: $('type').value, context: $('context').value.trim(), voice: $('voice').value };
+  settings = { role: $('role').value.trim(), type: $('type').value, context: $('context').value.trim(), voice: $('voice').value };
   conversation = [];
   recordedSeconds = 0;
   $('start').disabled = true;
