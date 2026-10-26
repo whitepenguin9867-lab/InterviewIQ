@@ -38,8 +38,12 @@ const demoRetryAnswers = [
 ];
 
 function loadVoices() {
-  if (!('speechSynthesis' in window)) return;
   const select = $('voice');
+  if (!('speechSynthesis' in window)) {
+    speechVoices = [];
+    select.replaceChildren(new Option('Text-only interviewer', 'text-only'));
+    return;
+  }
   const previous = select.value;
   const available = speechSynthesis.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('en'));
   const voiceChoices = [
@@ -50,6 +54,11 @@ function loadVoices() {
     available.find(voice => voice.name.includes(choice.name)) ||
     available.find(voice => voice.lang === choice.language)
   ).filter(Boolean);
+  if (!speechVoices.length && available.length) speechVoices = available.slice(0, 2);
+  if (!speechVoices.length) {
+    select.replaceChildren(new Option('Text-only interviewer', 'text-only'));
+    return;
+  }
   select.replaceChildren(new Option('Choose your interviewer', ''));
   for (const voice of speechVoices) {
     select.add(new Option(voice.name, voice.name));
@@ -85,8 +94,16 @@ function stopSpeaking() {
   if ('speechSynthesis' in window) speechSynthesis.cancel();
 }
 
+function hasInterviewerVoice() {
+  return settings.voice !== 'text-only' && speechVoices.some(voice => voice.name === settings.voice);
+}
+
 function speak(text, voiceName = settings.voice) {
-  if (!('speechSynthesis' in window)) return;
+  if (!('speechSynthesis' in window) || voiceName === 'text-only') {
+    $('avatar').classList.remove('talking');
+    $('speaking').textContent = 'Question shown on screen';
+    return;
+  }
   stopSpeaking();
   const utterance = new SpeechSynthesisUtterance(text);
   const selectedVoice = speechVoices.find(voice => voice.name === voiceName);
@@ -109,6 +126,8 @@ function showQuestion(question) {
   $('transcript').classList.add('empty');
   $('record').disabled = false;
   $('record').textContent = config.deepgram ? 'Start answering' : 'Use demo voice answer';
+  $('repeat').disabled = !hasInterviewerVoice();
+  $('repeat').textContent = hasInterviewerVoice() ? 'Repeat question' : 'Audio unavailable';
   $('notice').textContent = config.deepgram ? '' : 'Demo mode uses a sample answer.';
   answeringSince = Date.now();
   speak(question);
@@ -317,7 +336,8 @@ function startCoaching(index) {
   $('coach-transcript').classList.add('empty');
   $('coach-comparison').classList.add('hidden');
   $('coach-record').disabled = false;
-  $('coach-repeat').disabled = false;
+  $('coach-repeat').disabled = !hasInterviewerVoice();
+  $('coach-repeat').textContent = hasInterviewerVoice() ? 'Repeat question' : 'Audio unavailable';
   $('coach-back').disabled = false;
   $('coach-record').textContent = config.deepgram ? 'Record improved answer' : 'Use demo retry';
   $('coach-notice').textContent = config.deepgram ? 'Use the coaching focus, then answer the same question again.' : 'Demo mode will show how an improved retry is compared.';
@@ -409,7 +429,7 @@ async function recordCoachAnswer() {
       } catch (error) { $('coach-notice').textContent = 'Transcription failed: ' + error.message; }
       finally {
         $('coach-record').disabled = false;
-        $('coach-repeat').disabled = false;
+        $('coach-repeat').disabled = !hasInterviewerVoice();
         $('coach-back').disabled = false;
         $('coach-record').textContent = 'Record improved answer';
       }
