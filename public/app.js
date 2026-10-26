@@ -47,21 +47,25 @@ function loadVoices() {
   const previous = select.value;
   const available = speechSynthesis.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('en'));
   const voiceChoices = [
-    { name: 'Daniel', language: 'en-GB' },
-    { name: 'Karen', language: 'en-AU' }
+    { id: 'daniel', name: 'Daniel', language: 'en-GB' },
+    { id: 'karen', name: 'Karen', language: 'en-AU' }
   ];
-  speechVoices = voiceChoices.map(choice =>
-    available.find(voice => voice.name.includes(choice.name)) ||
-    available.find(voice => voice.lang === choice.language)
-  ).filter(Boolean);
-  if (!speechVoices.length && available.length) speechVoices = available.slice(0, 2);
+  const usedVoices = new Set();
+  speechVoices = voiceChoices.map(choice => {
+    const voice = available.find(item => item.name.includes(choice.name) && !usedVoices.has(item)) ||
+      available.find(item => item.lang === choice.language && !usedVoices.has(item)) ||
+      available.find(item => !usedVoices.has(item)) || available[0];
+    if (!voice) return null;
+    usedVoices.add(voice);
+    return { ...choice, voice };
+  }).filter(Boolean);
   if (!speechVoices.length) {
     select.replaceChildren(new Option('Text-only interviewer', 'text-only'));
     return;
   }
   select.replaceChildren(new Option('Choose your interviewer', ''));
-  for (const voice of speechVoices) {
-    select.add(new Option(voice.name, voice.name));
+  for (const interviewer of speechVoices) {
+    select.add(new Option(interviewer.name, interviewer.id));
   }
   if ([...select.options].some(option => option.value === previous)) select.value = previous;
 }
@@ -95,7 +99,7 @@ function stopSpeaking() {
 }
 
 function hasInterviewerVoice() {
-  return settings.voice !== 'text-only' && speechVoices.some(voice => voice.name === settings.voice);
+  return settings.voice !== 'text-only' && speechVoices.some(interviewer => interviewer.id === settings.voice);
 }
 
 function speak(text, voiceName = settings.voice) {
@@ -106,12 +110,12 @@ function speak(text, voiceName = settings.voice) {
   }
   stopSpeaking();
   const utterance = new SpeechSynthesisUtterance(text);
-  const selectedVoice = speechVoices.find(voice => voice.name === voiceName);
+  const selectedVoice = speechVoices.find(interviewer => interviewer.id === voiceName);
   if (selectedVoice) {
-    utterance.voice = selectedVoice;
-    utterance.lang = selectedVoice.lang;
+    utterance.voice = selectedVoice.voice;
+    utterance.lang = selectedVoice.voice.lang;
   }
-  const maleVoice = selectedVoice?.name.includes('Daniel');
+  const maleVoice = selectedVoice?.id === 'daniel';
   utterance.rate = maleVoice ? .86 : .95;
   utterance.pitch = maleVoice ? .48 : 1;
   utterance.onstart = () => { $('avatar').classList.add('talking'); $('speaking').textContent = 'Interviewer speaking…'; };
@@ -518,8 +522,8 @@ $('coach-repeat').onclick = () => speak(conversation[coachIndex]?.question || ''
 $('coach-back').onclick = () => { stopSpeaking(); renderReviews(); setScreen('report'); };
 $('coach-again').onclick = () => startCoaching(coachIndex);
 $('voice').onchange = () => {
-  const selectedVoice = speechVoices.find(voice => voice.name === $('voice').value);
-  if (selectedVoice) speak(`Hi, I am ${selectedVoice.name}.`, selectedVoice.name);
+  const selectedVoice = speechVoices.find(interviewer => interviewer.id === $('voice').value);
+  if (selectedVoice) speak(`Hi, I am ${selectedVoice.name}.`, selectedVoice.id);
 };
 fetch('/api/config').then(r => r.json()).then(data => {
   config = data;
